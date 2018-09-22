@@ -80,7 +80,7 @@ sub is_cloud_symmetric($cloud = [[]]) {
     return $still_sym;
 }
 
-print "Enter `r` to generate cloud || `rs` to check sym cloud || `x` to exit || `d` to toggle debug messages\n";
+print "Enter `r` to generate cloud || `rs` to check forced sym cloud || `x` to exit || `d` to toggle debug messages\n";
 while (1) {
     my $input = <STDIN>;
     chomp $input;
