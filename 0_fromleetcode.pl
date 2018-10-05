@@ -205,6 +205,95 @@ sub largestValues($root) {
     return $maxValueOfALevel;
 }
 
+# 540. Single Element in a Sorted Array
+sub singleNonDuplicate($nums) {
+    my ($l, $r) = (0, $#$nums);
+    my $mid = int(($r + $l) / 2);
+    while ($l < $r) {
+        $mid = int(($r + $l) / 2);
+        my $d = $mid % 2 ? -1 : 1; # nondup can only be on even index
+        # so if $mid is odd, we will compare with prev element and not next
+        if ( $nums->[$mid] == $nums->[$mid + $d] ) {
+            $l = $mid + 2*$d;
+
+        } else {
+            $r = $mid;
+        }
+    }
+    return $nums->[$l];
+}
+
+#739. Daily Temperatures
+sub dailyTemperatures($temperatures) {
+    my $r = scalar @$temperatures - 1;
+    my @w;
+    for (my $i = 0; $i <= $r; $i++) {
+        my $j = $i + 1;
+        if ( $temperatures->[$i] > $temperatures->[$i-1] ) {
+            $j = $i + $w[$i-1];
+        }
+        $w[$i] = $j;
+        while ($r >= $j && $temperatures->[$j] < $temperatures->[$i]) {
+            $j++;
+        }
+        if ($j == $r + 1) {
+            $w[$i] = 0;
+        } else {
+            $w[$i] = $j - $i;
+        }
+    }
+    return \@w;
+}
+#260. Single Number III
+sub singleNumber($nums) {
+    my %dups;
+    foreach my $n (@$nums) {
+        if (exists $dups{$n}) {
+            delete $dups{$n} if exists $dups{$n};
+        } else {
+            $dups{$n} = undef;
+        }
+    }
+    return [keys %dups];
+}
+sub singleNumber2($nums) {
+    my $xored = 0;
+    my @res;
+    for (my $i = 0; $i < scalar @$nums; $i++) {
+       $xored ^= $nums->[$i];
+    }
+    print Dumper($xored);
+    print unpack('B*', $xored), "\n";
+    $xored = $xored & (~ ( $xored - 1 ) );
+    print Dumper($xored);
+    print unpack('B*', $xored), "\n";
+
+    for (my $i = 0; $i < scalar @$nums; $i++) {
+        if (0 == ($xored & $nums->[$i])) {
+            $res[0] ^= $nums->[$i];
+        } else {
+            $res[1] ^= $nums->[$i];
+        }
+    }
+    return \@res;
+}
+
+# 413. Arithmetic Slices
+sub numberOfArithmeticSlices($arr) {
+  my %hh;
+  foreach my $el ( map { $arr->[$_] - $arr->[$_-1] } (0 .. $#$arr) ) {
+    $hh{$el} = exists $hh{$el} ? $hh{$el}+1 : 1;
+  }
+  my $arith_seq_count = 0;
+  foreach my $k (keys %hh) {
+    if (2 < $hh{$k}) {
+      for (my $i = $hh{$k} + 1; $i > 2; $i--) {
+        $arith_seq_count += ($hh{$k} + 1 - $i) + 1;
+      }
+    }
+  }
+  return $arith_seq_count;
+}
 
 #print Dumper(spiralMatrixIII(5, 6, 2, 4));
 #print Dumper(customSortString('cba', 'abcdfbca'));
@@ -234,5 +323,14 @@ my $awesomeTree = { val => 1,
         right => { val => 9, },
     }
 };
-print Dumper(largestValues($happyTree));
-print Dumper(largestValues($awesomeTree));
+
+# run forest run
+#print Dumper(largestValues($happyTree));
+#print Dumper(largestValues($awesomeTree));
+#print Dumper(singleNonDuplicate([1,1,2,3,3,4,4,8,8]));
+#print Dumper(singleNonDuplicate([1,1,2,2,3,3,4,4,8]));
+#print Dumper(singleNonDuplicate([1,2,2,3,3,4,4,5,5,8,8]));
+#print Dumper(dailyTemperatures([73, 74, 75, 71, 69, 72, 76, 73]));
+#print Dumper(singleNumber([1,2,1,3,2,5]));
+#print Dumper(singleNumber2([1,2,1,3,2,5]));
+print Dumper(numberOfArithmeticSlices( [1,2,3,4,5,6,8] ));
