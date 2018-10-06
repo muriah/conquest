@@ -5,6 +5,9 @@ use Data::Dumper;
 
 use experimental 'signatures';
 
+sub charAt($s, $i) {
+    return substr($s, $i, 1);
+}
 sub _printm(@matrix) {
     print join(' ', @$_), "\n" for @matrix;
     print '-'x10, "\n";
@@ -295,6 +298,131 @@ sub numberOfArithmeticSlices($arr) {
   return $arith_seq_count;
 }
 
+# 856. Score of Parentheses
+sub scoreOfParentheses2($S) {
+    print $S, "\n";
+    my $i = 0;
+    local *rscore = sub($Sarr) {
+        my $score = 0;
+        while ($i < scalar @$Sarr) {
+            if ('(' eq $Sarr->[$i]) {
+                $i++;
+                if (')' eq $Sarr->[$i]) {
+                    $score += 1;
+                    $i++;
+                } else {
+                    $score += 2 * rscore($Sarr);
+                }
+            } else {
+                return $score;
+            }
+        }
+        return $score;
+    };
+    return rscore([split('', $S)]);
+}
+sub scoreOfParentheses3($S) {
+    print $S, "\n";
+    my ($score, $layer) = (0, 0);
+    for (my $i = 0; $i < length($S); ++$i) {
+        print Dumper($i, $layer, $score);
+        print "\n";
+        $layer += ('(' eq charAt($S, $i)) ? 1 : -1;
+        if ( '(' eq charAt($S, $i) && ')' eq charAt($S, $i + 1) ) {
+            $score += 2**($layer - 1);
+        }
+    }
+    return $score;
+}
+sub scoreOfParentheses4($S) {
+    my @stack = (0);
+    for (my $i = 0; $i < length($S); $i++) {
+        if ( '(' eq charAt($S, $i) ) {
+            push @stack, 0;
+        } else {
+            my $accscore = pop @stack;
+            $stack[-1] += $accscore ? 2*$accscore : 1;
+        }
+    }
+    return $stack[0];
+}
+
+# 789. Escape The Ghosts
+sub escapeGhosts2($ghosts, $target) {
+    my $start_point = [0, 0];
+    my $my_manh_distance = abs($target->[1] - $start_point->[1]) + abs($target->[0] - $start_point->[0]);
+    foreach my $ghost (@$ghosts) {
+        my $ghost_manh_distance = abs($target->[1] - $ghost->[1]) + abs($target->[0] - $ghost->[0]);
+        if ($ghost_manh_distance <= $my_manh_distance) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+# 609. Find Duplicate File in System
+sub findDuplicate($paths) {
+    my %tt;
+    foreach (@$paths) {
+        my ($d, @f) = split(' ', $_);
+        foreach my $f_x (@f) {
+            my ($fn, $fch) = ($f_x =~ /(.+)\((\w+)\)/);
+            $tt{$fch} = [] unless exists $tt{$fch};
+            push @{$tt{$fch}}, $d . '/' . $fn;
+        }
+    }
+    return [ @tt{ grep { 1 < scalar @{$tt{$_}} } keys %tt } ];
+}
+
+# 451. Sort Characters By Frequency
+sub frequencySort($s) {
+    my @s = split('', $s);
+
+    local *freq = sub($symbol) {
+        return scalar grep { $symbol eq $_ } @s;
+    };
+    return join('', sort { freq($b) <=> freq($a) } @s);
+}
+sub frequencySort1($s) {
+    my %hh;
+    for (my $i = 0; $i < length($s); $i++) {
+        $hh{charAt($s, $i)} = 1 + ($hh{charAt($s, $i)} || 0);
+    }
+    return join('', map { $_ x $hh{$_} } sort { $hh{$b} <=> $hh{$a} } keys %hh);
+}
+# 526. Beautiful Arrangement
+sub countArrangement($N) {
+    my $count = 0;
+    local *calculate = sub($N, $pos, @visited) {
+        if ($pos > $N) {
+            $count++;
+        }
+        for (my $i = 1; $i <= $N; $i++) {
+            if (!$visited[$i] && ($pos % $i == 0 || $i % $pos == 0)) {
+                $visited[$i] = 1;
+                calculate($N, $pos + 1, @visited);
+                $visited[$i] = 0;
+            }
+        }
+    };
+    my @visited = (0)x($N+1);
+    calculate($N, 1, @visited);
+    return $count;
+}
+#508. Most Frequent Subtree Sum
+sub findFrequentTreeSum($root) {
+    my %sums;
+    local *traverse = sub($node) {
+        return 0 unless $node;
+        my $sum = traverse($node->{left}) + $node->{val} + traverse($node->{right});
+        $sums{$sum}++;
+        return $sum;
+    };
+    traverse($root);
+    my @s = sort { $sums{$b} <=> $sums{$a} } keys %sums;
+    return [grep { $sums{$_} >= $sums{$s[0]} } @s];
+}
+
 #print Dumper(spiralMatrixIII(5, 6, 2, 4));
 #print Dumper(customSortString('cba', 'abcdfbca'));
 #print Dumper(findDuplicates([4,3,2,7,8,1,3,1]));
@@ -302,6 +430,13 @@ sub numberOfArithmeticSlices($arr) {
 #print Dumper(reconstructQueue( [[7,0], [4,4], [7,1], [5,0], [6,1], [5,2]] ));
 #print Dumper(canVisitAllRooms( [[1,3],[3,0,1,2],[2],[0]] ));
 #print Dumper(canVisitAllRooms( [[1,3],[3,0,1],[2],[0]] ));
+#    1
+#   / \
+#  2   3
+# /   / \
+#4   5   7
+#   /
+#  6
 my $happyTree = { val => 1,
     left => { val => 2,
         left => { val => 4, },
@@ -333,4 +468,16 @@ my $awesomeTree = { val => 1,
 #print Dumper(dailyTemperatures([73, 74, 75, 71, 69, 72, 76, 73]));
 #print Dumper(singleNumber([1,2,1,3,2,5]));
 #print Dumper(singleNumber2([1,2,1,3,2,5]));
-print Dumper(numberOfArithmeticSlices( [1,2,3,4,5,6,8] ));
+#print Dumper(numberOfArithmeticSlices( [1,2,3,4,5,6,8] ));
+#print Dumper(scoreOfParentheses2("(()(()))"));
+#print Dumper(scoreOfParentheses3("(()(()()))"));
+#print Dumper(scoreOfParentheses4("(()(()()))"));
+#print Dumper(escapeGhosts2([[1, 0], [0, 3]], [0, 1]));
+#print Dumper(escapeGhosts2([[2, 0], [0, 3]], [1, 0]));
+#print Dumper(findDuplicate( ["root/a 1.txt(abcd) 2.txt(efgh)", "root/c 3.txt(abcd)", "root/c/d 4.txt(efgh)", "root 4.txt(efgh)"] ));
+#print Dumper(frequencySort('tree'), frequencySort('cccaaa'), frequencySort('Aabb'));
+#print Dumper(frequencySort1('tree'), frequencySort1('cccaaa'), frequencySort1('Aabb'));
+#print Dumper(countArrangement(7));
+print Dumper(findFrequentTreeSum({val => 5, left => { val => 2, }, right => { val => -3, }}));
+print Dumper(findFrequentTreeSum({val => 5, left => { val => 2, }, right => { val => -5, }}));
+print Dumper(findFrequentTreeSum($happyTree));
