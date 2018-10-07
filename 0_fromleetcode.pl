@@ -409,7 +409,7 @@ sub countArrangement($N) {
     calculate($N, 1, @visited);
     return $count;
 }
-#508. Most Frequent Subtree Sum
+# 508. Most Frequent Subtree Sum
 sub findFrequentTreeSum($root) {
     my %sums;
     local *traverse = sub($node) {
@@ -422,7 +422,92 @@ sub findFrequentTreeSum($root) {
     my @s = sort { $sums{$b} <=> $sums{$a} } keys %sums;
     return [grep { $sums{$_} >= $sums{$s[0]} } @s];
 }
+# 748. Shortest Completing Word
+sub shortestCompletingWord($licensePlate, $words) {
+    my $alrdy_found;
 
+    my @lp_symbols = grep { $_ =~ /[a-zA-Z]/g } split('', lc($licensePlate));
+
+    foreach my $word (@$words) {
+
+        next if ($alrdy_found && length($word) > length($alrdy_found));
+
+        my $mb_found = $word;
+        foreach my $symbol (@lp_symbols) {
+            if (-1 < index($mb_found, $symbol)) {
+                $mb_found =~ s/$symbol/_/;
+            } else {
+                $mb_found = undef;
+                last;
+            }
+        }
+        if ( $mb_found && (!$alrdy_found || (length($alrdy_found) > length($word))) ) {
+            $alrdy_found = $word;
+        }
+    }
+    return $alrdy_found;
+}
+
+# 712. Minimum ASCII Delete Sum for Two Strings
+sub minimumDeleteSum($s1, $s2) {
+    my ($s1le, $s2le) = (length($s1), length($s2));
+    my @dp;
+    push @dp, [(0) x ($s2le+1)] for (0 .. $s1le);
+    for (my $i = 1; $i <= $s1le; $i++) {
+        for (my $j = 1; $j <= $s2le; $j++) {
+            if (charAt($s1, $i-1) eq charAt($s2, $j-1)) {
+                $dp[$i]->[$j] = $dp[$i-1]->[$j-1] + ord(charAt($s1, $i-1)) + ord(charAt($s2, $j-1));
+            } else {
+                $dp[$i]->[$j] = $dp[$i-1]->[$j] > $dp[$i]->[$j-1] ?
+                    $dp[$i-1]->[$j] :
+                    $dp[$i]->[$j-1];
+            }
+        }
+    }
+    _printm(@dp);
+    my $s1sum = 0; $s1sum += ord(charAt($s1, $_-1)) for (1 .. $s1le);
+    my $s2sum = 0; $s2sum += ord(charAt($s2, $_-1)) for (1 .. $s2le);
+    return $s1sum + $s2sum - $dp[-1]->[-1];
+
+}
+# 865. Smallest Subtree with all the Deepest Nodes
+sub subtreeWithAllDeepest($root) {
+    my @nodes = ($root->{val});
+    my @stack = ($root);
+    while (scalar @stack) {
+        my $node = shift @stack;
+        push @stack, $node->{left} if $node->{left};
+        push @stack, $node->{right} if $node->{right};
+        push @nodes, exists $node->{left} ? $node->{left}->{val} : undef,
+            exists $node->{right} ? $node->{right}->{val} : undef;
+    }
+    # find deepest child
+    my $r = -1;
+    $r-- while (!$nodes[$r]);
+    # find parent index
+    my $idx = int(($#nodes + $r)/2) == ($#nodes + $r)/2 ? ($#nodes + $r)/2 :
+        ($#nodes + $r - 1)/2;
+    return [@nodes[$idx, 2*$idx+1, 2*$idx+2]];
+}
+
+# 238. Product of Array Except Self
+sub productExceptSelf($nums) {
+    my @output = (1) x scalar @$nums;
+    my $partialProduct = 1;
+    for (my $i = 0; $i <= $#$nums; $i++) {
+        $output[$i] = $partialProduct;
+        $partialProduct *= $nums->[$i];
+    }
+    $partialProduct = 1;
+    for (my $i = $#$nums; $i > -1; $i--) {
+        $output[$i] *= $partialProduct;
+        $partialProduct *= $nums->[$i];
+    }
+    return \@output;
+}
+
+################################################################
+# run forest run
 #print Dumper(spiralMatrixIII(5, 6, 2, 4));
 #print Dumper(customSortString('cba', 'abcdfbca'));
 #print Dumper(findDuplicates([4,3,2,7,8,1,3,1]));
@@ -459,7 +544,6 @@ my $awesomeTree = { val => 1,
     }
 };
 
-# run forest run
 #print Dumper(largestValues($happyTree));
 #print Dumper(largestValues($awesomeTree));
 #print Dumper(singleNonDuplicate([1,1,2,3,3,4,4,8,8]));
@@ -478,6 +562,25 @@ my $awesomeTree = { val => 1,
 #print Dumper(frequencySort('tree'), frequencySort('cccaaa'), frequencySort('Aabb'));
 #print Dumper(frequencySort1('tree'), frequencySort1('cccaaa'), frequencySort1('Aabb'));
 #print Dumper(countArrangement(7));
-print Dumper(findFrequentTreeSum({val => 5, left => { val => 2, }, right => { val => -3, }}));
-print Dumper(findFrequentTreeSum({val => 5, left => { val => 2, }, right => { val => -5, }}));
-print Dumper(findFrequentTreeSum($happyTree));
+#print Dumper(findFrequentTreeSum({val => 5, left => { val => 2, }, right => { val => -3, }}));
+#print Dumper(findFrequentTreeSum({val => 5, left => { val => 2, }, right => { val => -5, }}));
+#print Dumper(findFrequentTreeSum($happyTree));
+#print Dumper(findFrequentTreeSum($happyTree));
+#print Dumper(shortestCompletingWord("1s3 PSt", ["step", "steps", "stripe", "stepple"]));
+#print Dumper(minimumDeleteSum('delete', 'leet'));
+my $prettyTree = { val => 3,
+    left => { val => 5,
+        left => { val => 6 },
+        right => { val => 2,
+            left => { val => 7 },
+            right => { val => 4, }
+        }
+    },
+    right => { val => 1,
+        left => { val => 0 },
+        right => { val => 8 },
+    },
+};
+#print Dumper(subtreeWithAllDeepest($prettyTree));
+
+print Dumper(productExceptSelf([1,2,3,4]));
