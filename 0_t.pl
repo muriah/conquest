@@ -70,128 +70,62 @@ sub i_will_eat_ur_kids_partition($arr, $l, $r) {
 }
 
 sub partition($arr, $l, $r) {
-    print join(", ", @$arr), "\n\n";
+    my $pivot = $$arr[$l];
+    my $pivot_idx = $l; # idx of the last element < pivot, we will swap it with pivot at the end
+    for my $j ( $l + 1 .. $r ) {
+        if ($pivot >= $$arr[$j]) {
+            $pivot_idx++;
+            swap($arr, $pivot_idx, $j);
+        }
+    }
+    swap($arr, $pivot_idx, $l);
+    return $pivot_idx;
+}
+
+sub _sort_quick($arr = [], $left = 0, $right = 0) {
+    if ($left >= $right) {
+        return $arr;
+    } else {
+        my $p = partition($arr, $left, $right);
+        _sort_quick($arr, $left, $p - 1);
+        _sort_quick($arr, $p + 1, $right);
+    }
+}
+
+sub sort_quick($arr = []) {
+    return $arr if (2 > @$arr);
+    return _sort_quick($arr, 0, $#$arr);
+}
+
+sub sort_quick_grep(@arr) {
+    return @arr if 1 >= @arr;
+    my $pivot = shift @arr;
+    sort_quick_grep( grep { $_ < $pivot } @arr ), $pivot, sort_quick_grep( grep { $_ >= $pivot } @arr );
+}
+
+#my $unsorted = [1001,11,99,123,6,100,999,4,7,7,8,0,1,2,13,0,0,0];
+#print Dumper(sort_bubble($unsorted));
+#$unsorted = [76,79,99,123,6,100,999,4,7,7,8,0,1,2,13,0,0,78];
+#print Dumper(sort_quick($unsorted));
+print Dumper(sort_quick_grep((76,79,99,123,6,100,999,4,7,7,8,0,1,2,13,0,0,78)));
+exit(0);
+
+
+__DATA__
+sub partition($arr, $l, $r) {
+    print join(", ", @$arr[$l .. $r]), "\n";
 
     my $lambda = $$arr[$r];
     my $i = $l - 1;
     for my $j ($l .. $r - 1) {
-        if ($$arr[$j] <= $lambda) {
+        if ($lambda >= $$arr[$j]) {
             $i++;
             swap($arr, $i, $j);
         }
+        print '- ', join(", ", @$arr[$l .. $r]), "\n";
     }
-    $i++;
-    swap($arr, $i, $r);
-    return $i;
+    swap($arr, $i+1, $r);
+    print join(", ", @$arr[$l .. $r]), "\n";
+    print "---\n";
+    return $i+1;
 }
-
-sub sort_quick($arr = [], $left = 0, $right = 0) {
-    if ($left >= $right) {
-        return $arr;
-    } else {
-        my $p = i_will_eat_ur_kids_partition($arr, $left, $right);
-        sort_quick($arr, $left, $p);
-        sort_quick($arr, $p + 1, $right);
-    }
-}
-
-my $unsorted = [1001,11,99,123,6,100,999,4,7,7,8,0,1,2,13,0,0,0];
-#print i_will_eat_ur_kids_partition($unsorted, 0, $#$unsorted);
-#print Dumper($unsorted);
-#print Dumper(sort_bubble($unsorted));
-print Dumper(sort_quick($unsorted, 0, $#$unsorted));
-exit(0);
-
-# LINKED LIST
-
-use constant VAL => 0;
-use constant NEXT => 1;
-
-my $list = undef;
-my $tail = \$list;
-foreach (1..5) {
-    my $node = [ $_ * $_, undef ];
-    $$tail = $node; # $tail is ref to new node
-    $tail = \$node->[NEXT]; # $tail is ref to new node's NEXT
-}
-
-my $listh = undef;
-foreach (reverse 1..5) {
-    my $node = { v => $_ * $_, n => undef };
-    $node->{n} = $listh;
-    $listh = $node;
-}
-
-sub add2head($list, $v) {
-    my $new_node = { v => $v, n => $list };
-    $list = $new_node;
-    return $list;
-}
-
-sub add2tail($list, $v) {
-    my $next = $list;
-    return { v => $v, n => undef } unless (scalar keys %$next);
-    while ($next->{n}) {
-        $next = $next->{n};
-    }
-    $next->{n} = { v => $v, n => undef };
-    return $list;
-}
-
-print Dumper(add2tail(add2tail(add2head({}, 36), 49), 0));
-print Dumper(add2head(add2tail(add2tail({}, 36), 49), 0));
-
-sub reverse_listh($listh) {
-    my $r_listh;
-    while (my $listh_n = $listh) {
-        $listh = $listh->{n};
-        $listh_n->{n} = $r_listh;
-        $r_listh = $listh_n;
-    }
-    return $r_listh;
-}
-
-#print Dumper(reverse_listh($listh));
-
-
-# $list = list_reverse( $list )
-# Reverse the order of the elements of a list.
-sub list_reverse {
-    my $old = shift;
-    my $new = undef;
-    while (my $cur = $old) {
-        $old = $old->[NEXT];
-        $cur->[NEXT] = $new;
-        $new = $cur;
-    }
-    return $new;
-}
-
-sub list_reverse_swapval($list) {
-    my $i = 0;
-    while ($i < scalar @$list / 2) {
-        next if $i == scalar @$list - $i - 1;
-        my $temp = $list->[$i]->[VAL];
-        $list->[$i]->[VAL] = $list->[scalar @$list - $i - 1]->[VAL];
-        $list->[scalar @$list - $i -1]->[VAL] = $temp;
-        $i++;
-    }
-    return $list;
-}
-
-sub list_reverse1($list) {
-    my $list_r;
-    while (my $next_ref = $list) {
-        $list = $list->[NEXT];
-        $next_ref->[NEXT] = $list_r;
-        $list_r = $next_ref;
-    }
-    return $list_r;
-}
-
-#print Dumper($list);
-#$list = list_reverse( $list );
-#print Dumper($list);
-#print Dumper(list_reverse_swapval($list));
-#print Dumper($list);
-#print Dumper(list_reverse1($list));

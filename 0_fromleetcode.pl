@@ -491,7 +491,7 @@ sub subtreeWithAllDeepest($root) {
 }
 
 # 238. Product of Array Except Self
-sub productExceptSelf($nums) {
+sub productExceptSelf2($nums) {
     my @output = (1) x scalar @$nums;
     my $partialProduct = 1;
     for (my $i = 0; $i <= $#$nums; $i++) {
@@ -505,9 +505,192 @@ sub productExceptSelf($nums) {
     }
     return \@output;
 }
+# 462. Minimum Moves to Equal Array Elements II
+sub minMoves2($nums) {
+    my $le = scalar @$nums;
+    @$nums = sort { $a <=> $b } @$nums;
+    my $move_count = 0;
+    for (my $i = 0; $i < int($le/2); $i++) {
+        $move_count += $nums->[$le-1-$i] - $nums->[$i];
+    }
+    return $move_count;
+}
+# 817. Linked List Components
+sub numComponents($head, $G) {
+    my %G = map { $_ => 1 } @$G;
+    my $c = 0;
+    while ($head->{next}) {
+        unless (exists $G{$head->{next}->{val}}) {
+            $c++;
+        }
+        $head = $head->{next};
+    }
+    return $c + 1;
+}
+# 495. Teemo Attacking
+sub findPoisonedDuration($timeSeries, $duration) {
+    my $timePoisoned = 0;
+    for (my $i = 0; $i < $#$timeSeries; $i++) {
+        if ($duration <= $timeSeries->[$i+1] - $timeSeries->[$i]) {
+            $timePoisoned += $duration;
+        } else {
+            $timePoisoned += $timeSeries->[$i+1] - $timeSeries->[$i];
+        }
+    }
+    # last attack poison for duration always
+    $timePoisoned += $duration;
+    return $timePoisoned;
+}
+# 347. Top K Frequent Elements
+sub topKFrequent($nums, $k) {
+    my %mostfreq;
+    foreach my $num (@$nums) {
+        $mostfreq{$num}++;
+    }
+    #return [ (sort { $mostfreq{$b} <=> $mostfreq{$a} } keys %mostfreq)[0..$k-1] ];
+
+    my @freq2index;
+    for (keys %mostfreq) {
+        unless ($freq2index[$mostfreq{$_}]) {
+            $freq2index[$mostfreq{$_}] = [];
+        }
+        push @{$freq2index[$mostfreq{$_}]}, $_;
+    }
+
+    my @output;
+    for ( reverse (0 .. $#freq2index) ) {
+        last if ($k == scalar @output);
+        if ($freq2index[$_]) {
+            for my $n ( @{$freq2index[$_]} ) {
+                push @output, int($n);
+            }
+        }
+    }
+    return \@output;
+}
+
+# 667. Beautiful Arrangement II
+sub constructArray($n, $k) {
+    return if $k < 2;
+    my @output;
+    my @arr;
+    $arr[$_] = $_+1 for (0 .. $n-1);
+    @output = @arr;
+    # we put the last number in such a position that numbers are like this:
+    # 1, n[last], 2, n[last-1], 3, ...
+    # if k is even we reverse the tail, bc the tail is already +1
+    for my $swappos (0 .. $k/2-1) {
+        splice( @output, $swappos*2+1, 0, splice(@output, $#output) );
+        if ($swappos == $k/2-1 && 0 == $k % 2) {
+            splice( @output, $swappos*2+1, $#output-$swappos*2+1, reverse splice(@output, $swappos*2+1, $#output-$swappos*2+1) );
+        }
+    }
+    return \@output;
+}
+
+# 677. Map Sum Pairs
+sub mapSumCheck() {
+    my $ms = MapSum->new();
+    $ms->insert('apple', 3);
+    print Dumper($ms->sum('app'));
+    $ms->insert('app', 2);
+    print Dumper($ms->sum('app'));
+    print Dumper($ms->sum('go'));
+}
+
+# 46. Permutations
+sub permute($nums) {
+    return if $#$nums > 7;
+    my @output = ();
+    for (my $j = 0; $j <= $#$nums; $j++) {
+        my @h = ((@$nums)[0 .. $j-1], (@$nums)[$j+1 .. $#$nums]);
+        for (my $i = 0; $i < $#$nums; $i++) {
+            splice(@h, 0, 0, splice(@h, $#h, 1));
+            push @output, [ $nums->[$j], @h ];
+        }
+    }
+    return \@output;
+}
+
+# 547. Friend Circles
+sub findCircleNum(@M) {
+    local *findFriends = sub($M, $visited, $j) {
+        for (my $i = 0; $i <= $#M; $i++) {
+            if (1 == $M->[$j]->[$i] && 0 == $visited->[$i]) {
+                $visited->[$i] = 1;
+                findFriends($M, $visited, $i);
+            }
+        }
+    };
+
+    my $fcnum = 0;
+    my @visited = (0) x scalar @M;
+    for (my $j = 0; $j <= $#M; $j++) {
+        unless ($visited[$j]) {
+            findFriends(\@M, \@visited, $j);
+            $fcnum++;
+        }
+    }
+    return $fcnum;
+}
+
+# 565. Array Nesting
+sub arrayNesting($nums) {
+    my @visited = (0)x($#$nums + 1);
+
+    local *keepLooping = sub($nums, $idx) {
+        my $c = 1;
+        my $i = $nums->[$idx];
+        while ($i != $idx) {
+            $visited[$i] = 1;
+            $c++;
+            $i = $nums->[$i];
+        }
+        return $c;
+    };
+
+    my $max = 0;
+    for (my $i = 0; $i <= $#$nums; $i++) {
+       next if (1 == $visited[$i]);
+       my $localMax = keepLooping($nums, $i);
+       $max = $max < $localMax ? $localMax : $max;
+    }
+
+    return $max;
+}
+# 781. Rabbits in Forest
+sub numRabbits($answers) {
+    my %hm;
+    for (my $i = 0; $i <= $#$answers; $i++) {
+        unless (exists $hm{$answers->[$i]}) {
+            $hm{$answers->[$i]} = $answers->[$i] + 1;
+        }
+    }
+    my $sum = 0;
+    $sum += $hm{$_} foreach ( keys %hm );
+    return $sum;
+};
 
 ################################################################
-# run forest run
+print Dumper(numRabbits([1,1,2]));
+print Dumper(numRabbits([10,10,10]));
+exit(0);
+print Dumper(arrayNesting([7,4,0,3,1,6,2,5]));
+print Dumper(findCircleNum([1,0,0], [0,1,0], [0,0,1]));
+print Dumper(findCircleNum(
+    [1,0,0,0,0,],
+    [0,1,0,0,0,],
+    [0,0,1,0,0,],
+    [0,0,0,1,1,],
+    [0,0,0,1,1,]
+));
+#print Dumper(permute([1,2,3,4]));
+#mapSumCheck();
+#print Dumper(constructArray(10, 5));
+#print Dumper(constructArray([1,1,1,2,2,3], 2));
+#print Dumper(topKFrequent([1,1,1,2,2,3], 2));
+#print Dumper(findPoisonedDuration([1,4], 2));
+#print Dumper(findPoisonedDuration([1,2,3,5], 3));
 #print Dumper(spiralMatrixIII(5, 6, 2, 4));
 #print Dumper(customSortString('cba', 'abcdfbca'));
 #print Dumper(findDuplicates([4,3,2,7,8,1,3,1]));
@@ -582,5 +765,26 @@ my $prettyTree = { val => 3,
     },
 };
 #print Dumper(subtreeWithAllDeepest($prettyTree));
+#print Dumper(productExceptSelf2([1,2,3,4]));
+#print Dumper(minMoves2([1,2,3,4]));
+#print Dumper(numComponents({val => 0,
+#    next => { val => 1, next => { val => 2, next => { val => 3, next => { val => 4,
+#    next => { val => 5, next => { val => 6, next => { val => 7 }}}}}}}}, [0,2,3,5,7]));
 
-print Dumper(productExceptSelf([1,2,3,4]));
+
+package MapSum;
+sub new($class) {
+    return bless {map => {}}, $class;
+}
+sub insert($self, $k, $v) {
+    $self->{map}->{$k} = $v;
+    return $self;
+}
+sub sum($self, $prefix) {
+    my $sum = 0;
+    foreach (grep { $_ =~ /^$prefix/ } keys %{$self->{map}}) {
+        $sum += $self->{map}->{$_};
+    }
+    return $sum;
+
+}
