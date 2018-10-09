@@ -25,18 +25,25 @@ sub _BFS($graph, $ve) {
     }
     return \@d;
 }
-my %black;
-my @path;
-sub _DFS($graph, $ve, $vefrom) {
-    return if exists $black{$ve};
-    print "$ve -> ";
-    $path[$ve] = $vefrom;
-    foreach my $vee ( @{$graph->[$ve]} ) {
-        unless(exists $black{$vee}) {
-            _DFS($graph, $vee, $ve);
-            $black{$vee} = 1;
+
+sub _DFS($graph) {
+    my %black;
+    my @path;
+
+    local *__DFS = sub($graph, $ve, $vefrom) {
+        return if exists $black{$ve};
+        print "$ve -> ";
+        $path[$ve] = $vefrom;
+        foreach my $vee ( @{$graph->[$ve]} ) {
+            unless (exists $black{$vee}) {
+                _DFS($graph, $vee, $ve);
+                $black{$vee} = 1;
+            }
         }
-    }
+    };
+
+    __DFS($graph, 0, undef);
+    return \@path;
 }
 
 sub get_path2($path, $ve) {
@@ -50,10 +57,10 @@ sub get_path2($path, $ve) {
 #           0         1      2    3    4   5   6   7
 my $graph = [[1,2,3], [5,4], [6], [7], [], [], [], []];
 _BFS($graph, 0);
-_DFS($graph, 0, undef);
+my $path = _DFS($graph);
 print "\n";
-print Dumper(get_path2(\@path, 7));
-print Dumper(get_path2(\@path, 5));
+print Dumper(get_path2($path, 7));
+print Dumper(get_path2($path, 5));
 exit(0);
 
 sub _visit_tree_node($node) {

@@ -661,20 +661,50 @@ sub arrayNesting($nums) {
 # 781. Rabbits in Forest
 sub numRabbits($answers) {
     my %hm;
-    for (my $i = 0; $i <= $#$answers; $i++) {
-        unless (exists $hm{$answers->[$i]}) {
-            $hm{$answers->[$i]} = $answers->[$i] + 1;
+    my $sum = 0;
+    for my $a (@$answers) {
+        if (0 == $a) {
+            $sum++;
+        } else {
+            $hm{$a} = 0 unless exists $hm{$a};
+            if (0 == $hm{$a}) {
+                $sum += $a + 1;
+            }
+            $hm{$a}++;
+            # cant be more than that the same color, restart
+            if ($a + 1 == $hm{$a}) {
+                $hm{$a} = 0;
+            }
         }
     }
-    my $sum = 0;
-    $sum += $hm{$_} foreach ( keys %hm );
     return $sum;
 };
 
+sub generateParenthesis2($n) {
+    my $list = [];
+    backtrack($list, "", 0, 0, $n);
+    return $list;
+}
+sub backtrack($list, $str, $open, $close, $max) {
+    print Dumper($open, $close, $str);
+    if($max*2 == length($str)) {
+        push @$list, $str;
+        return;
+    }
+    if ($open < $max) {
+        backtrack($list, $str.'(', $open+1, $close, $max);
+    }
+    if ($close < $open) {
+        backtrack($list, $str.')', $open, $close+1, $max);
+    }
+}
+
 ################################################################
+generateParenthesis2(3);
+exit(0);
 print Dumper(numRabbits([1,1,2]));
 print Dumper(numRabbits([10,10,10]));
-exit(0);
+print Dumper(numRabbits([3,3,3,3,3,3]));
 print Dumper(arrayNesting([7,4,0,3,1,6,2,5]));
 print Dumper(findCircleNum([1,0,0], [0,1,0], [0,0,1]));
 print Dumper(findCircleNum(
